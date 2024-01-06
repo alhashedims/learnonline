@@ -9,16 +9,19 @@
 // Referencias a elementos del DOM
 const roomSelectionContainer = document.getElementById('room-selection-container')
 const roomInput = document.getElementById('room-input')
+const nameInput = document.getElementById('name-input')
 const connectButton = document.getElementById('connect-button')
+const sendmessage = document.getElementById('chatSendBtn')
 
-const videoChatContainer = document.getElementById('video-chat-container')
+const chatInput = document.getElementById('chatInput')
+
+const videoChatContainer = document.getElementById('student')
 const localVideoComponent = document.getElementById('local-video')
 
 // Variables.
 const socket = io()
 const mediaConstraints = {
   audio: true,
-  video: true,
 }
 const offerOptions = {
   offerToReceiveVideo: 1,
@@ -44,12 +47,96 @@ const iceServers = {
     { urls: 'stun:stun1.l.google.com:19302' },
   ],
 }
+$("#chatInput").keydown(function(event){
+  if (event.shiftKey && event.keyCode === 13) {
+  } else if (event.keyCode === 13) {
+    $("#chatSendBtn").click();
+  }
+});
 
+function getRoom(){
+  var params = window.location.search.substr(1).split("&");
+  
+  if(params){
+      for(let i = 0; i < params.length; i++){
+          var key = params[i].split("=")[0];
+          var value = params[i].split("=")[1];
+          
+          if(key === "room"){
+              return decodeURIComponent(value);
+          }
+      }
+  }
+  
+  else{
+      return "";
+  }
+}
+function getName(){
+  var params = window.location.search.substr(1).split("&");
+  
+  if(params){
+      for(let i = 0; i < params.length; i++){
+          var key = params[i].split("=")[0];
+          var value = params[i].split("=")[1];
+          
+          if(key === "name"){
+              return decodeURIComponent(value);
+          }
+      }
+  }
+  
+  else{
+      return "";
+  }
+}
 // BUTTON LISTENER ============================================================
 connectButton.addEventListener('click', () => {
-  joinRoom(roomInput.value)
+  joinRoom(roomInput.value,nameInput.value)
 })
+sendmessage.addEventListener('click', () => {
+  sndmsg(chatInput.value);
+  chatInput.value = ''
 
+})
+function sndmsg(event) {
+ try {
+  var date = new Date().toLocaleTimeString();
+  socket.emit('message', {name: getRoom(),message:event,senderId: localPeerId,roomId:getRoom(),sender:getName(),date:date});
+  addstudent(getName(),event,date,"send");
+  var fileInput = document.getElementById('fileInput');
+  var file = fileInput.files[0];
+  if(file!=undefined){
+    
+  var reader = new FileReader();
+  
+  reader.onload = function(e) {
+    var imageBase64 = e.target.result;
+    var date = new Date().toLocaleTimeString();
+  
+    // إرسال الصورة عبر socket.emit
+    socket.emit('image', {name: getRoom(),message:imageBase64,senderId: localPeerId,roomId:getRoom(),sender:getName(),date:date});
+    var img = new Image();
+    img.src = imageBase64;
+    img.style.width = '300px';
+    img.style.height = '200px';
+    $("#chats").append(img);
+  };
+  reader.readAsDataURL(file);
+  fileInput.value = ''; 
+}
+ } catch (error) {
+  alert(error);
+ }
+}
+
+socket.on('image', async (event) => {
+  var img = new Image();
+  img.src = event.message;
+  img.style.width = '300px';
+  img.style.height = '200px';
+  $("#chats").append(img);
+})
 // SOCKET EVENT CALLBACKS =====================================================
 
 /**
@@ -57,6 +144,7 @@ connectButton.addEventListener('click', () => {
  */
 socket.on('room_created', async (event) => {
   localPeerId = event.peerId
+  localStorage.setItem('token_admin', "true");
   console.log(`Current peer ID: ${localPeerId}`)
   console.log(`Socket event callback: room_created with by peer ${localPeerId}, created room ${event.roomId}`)
 
@@ -68,6 +156,9 @@ socket.on('room_created', async (event) => {
  * start_call
  */
 socket.on('room_joined', async (event) => {
+  if(localStorage.getItem('token_admin')!="true"){
+    $("#students").hide();
+  }
   localPeerId = event.peerId
   console.log(`Current peer ID: ${localPeerId}`)
   console.log(`Socket event callback: room_joined by peer ${localPeerId}, joined room ${event.roomId}`)
@@ -76,6 +167,7 @@ socket.on('room_joined', async (event) => {
   console.log(`Emit start_call from peer ${localPeerId}`)
   socket.emit('start_call', {
     roomId: event.roomId,
+    name:nameInput.value,
     senderId: localPeerId
   })
 })
@@ -83,22 +175,26 @@ socket.on('room_joined', async (event) => {
 /**
  * Mensaje start_call recibido y crea el objeto RTCPeerConnection para enviar la oferta al otro par
  */
-socket.on('start_call', async (event) => {
+socket.on('start_call', async (event) => {  
   const remotePeerId = event.senderId;
   console.log(`Socket event callback: start_call. RECEIVED from ${remotePeerId}`)
-
+  var name = event.name;
   peerConnections[remotePeerId] = new RTCPeerConnection(iceServers)
   addLocalTracks(peerConnections[remotePeerId])
-  peerConnections[remotePeerId].ontrack = (event) => setRemoteStream(event, remotePeerId)
+  peerConnections[remotePeerId].ontrack = (event) => setRemoteStream(event, remotePeerId,name)
   peerConnections[remotePeerId].oniceconnectionstatechange = (event) => checkPeerDisconnect(event, remotePeerId);
   peerConnections[remotePeerId].onicecandidate = (event) => sendIceCandidate(event, remotePeerId)
   await createOffer(peerConnections[remotePeerId], remotePeerId)
 })
-
+socket.on('message', async (event) => {  
+  var name = event.message;
+  addstudent(event.sender,name,event.date);
+})
 /**
  * Mensaje webrtc_offer recibido con la oferta y envía la respuesta al otro par
  */
 socket.on('webrtc_offer', async (event) => {
+  var name = event.name;
   console.log(`Socket event callback: webrtc_offer. RECEIVED from ${event.senderId}`)
   const remotePeerId = event.senderId;
 
@@ -108,7 +204,7 @@ socket.on('webrtc_offer', async (event) => {
   console.log(`Remote description set on peer ${localPeerId} after offer received`)
   addLocalTracks(peerConnections[remotePeerId])
 
-  peerConnections[remotePeerId].ontrack = (event) => setRemoteStream(event, remotePeerId)
+  peerConnections[remotePeerId].ontrack = (event) => setRemoteStream(event, remotePeerId,name)
   peerConnections[remotePeerId].oniceconnectionstatechange = (event) => checkPeerDisconnect(event, remotePeerId);
   peerConnections[remotePeerId].onicecandidate = (event) => sendIceCandidate(event, remotePeerId)
   await createAnswer(peerConnections[remotePeerId], remotePeerId)
@@ -137,6 +233,7 @@ socket.on('webrtc_ice_candidate', (event) => {
   var candidate = new RTCIceCandidate({
     sdpMLineIndex: event.label,
     candidate: event.candidate,
+    name:event.name,
   })
   peerConnections[senderPeerId].addIceCandidate(candidate)
 })
@@ -146,12 +243,12 @@ socket.on('webrtc_ice_candidate', (event) => {
 /**
  * Envía mensaje join al servidor. Servidor responderá con room_joined o room_created
  */
-function joinRoom(room) {
+function joinRoom(room,name) {
   if (room === '') {
     alert('Please type a room ID')
   } else {
     roomId = room
-    socket.emit('join', {room: room, peerUUID: localPeerId})
+    socket.emit('join', {room: room, peerUUID: localPeerId,name,name})
     showVideoConference()
   }
 }
@@ -171,13 +268,32 @@ async function setLocalStream(mediaConstraints) {
   console.log('Local stream set')
   let stream
   try {
-    stream = await navigator.mediaDevices.getUserMedia(mediaConstraints)
+    stream = await navigator.mediaDevices.getDisplayMedia(mediaConstraints)
   } catch (error) {
     console.error('Could not get user media', error)
   }
 
   localStream = stream
-  localVideoComponent.srcObject = stream
+  const videoREMOTO = document.createElement('video');
+  videoREMOTO.srcObject = stream; // تأكد من أن event.streams[0] معرفة بشكل صحيح
+  videoREMOTO.id = 'remotevideo_'; // تأكد من أن remotePeerId معرفة بشكل صحيح
+  videoREMOTO.setAttribute('autoplay', '');
+  videoREMOTO.style.width = "200px"; // تحديد عرض الفيديو
+  videoREMOTO.style.height = "150px"; // تحديد ارتفاع الفيديو
+  
+  // إنشاء عنصر النص لاسم الطالب
+  var studentName = document.createElement('p');
+  studentName.textContent = nameInput.value; // استبدل 'اسم الطالب' بالاسم الفعلي للطالب
+  studentName.style.marginLeft = "10px"; // تحديد المسافة بين الفيديو والنص
+  
+  // إنشاء عنصر div لتحديد الصف
+  var rowContainer = document.createElement('div');
+  rowContainer.style.display = "flex"; // تحديد ترتيب العناصر بشكل أفقي
+  rowContainer.style.alignItems = "center"; // تحديد محاذاة العناصر بالوسط
+  rowContainer.append(videoREMOTO, studentName); // إضافة الفيديو واسم الطالب إلى الصف
+  
+  videoChatContainer.append(rowContainer);
+  videoChatContainer.append(stream)
 }
 
 /**
@@ -207,6 +323,7 @@ async function createOffer(rtcPeerConnection, remotePeerId) {
     type: 'webrtc_offer',
     sdp: sessionDescription,
     roomId: roomId,
+    name:nameInput.value,
     senderId: localPeerId,
     receiverId: remotePeerId
   })
@@ -237,15 +354,34 @@ async function createAnswer(rtcPeerConnection, remotePeerId) {
 /**
  * Callback cuando se recibe el stream multimedia del par remoto
  */
-function setRemoteStream(event, remotePeerId) {
+function setRemoteStream(event, remotePeerId,name) {
   console.log('Remote stream set')
   if(event.track.kind == "video") {
-    const videoREMOTO = document.createElement('video')
-    videoREMOTO.srcObject = event.streams[0];
-    videoREMOTO.id = 'remotevideo_' + remotePeerId;
+    const videoREMOTO = document.createElement('video');
+    videoREMOTO.srcObject = event.streams[0]; // تأكد من أن event.streams[0] معرفة بشكل صحيح
+    videoREMOTO.id = 'remotevideo_' + remotePeerId; // تأكد من أن remotePeerId معرفة بشكل صحيح
     videoREMOTO.setAttribute('autoplay', '');
-    videoREMOTO.style.backgroundColor = "red";
-    videoChatContainer.append(videoREMOTO)
+    videoREMOTO.style.width = "200px"; // تحديد عرض الفيديو
+    videoREMOTO.style.height = "150px"; // تحديد ارتفاع الفيديو
+    
+    // إنشاء عنصر النص لاسم الطالب
+    var studentName = document.createElement('p');
+    studentName.textContent = name; // استبدل 'اسم الطالب' بالاسم الفعلي للطالب
+    studentName.style.marginLeft = "10px"; // تحديد المسافة بين الفيديو والنص
+    
+    // إنشاء عنصر div لتحديد الصف
+    var rowContainer = document.createElement('div');
+    rowContainer.style.display = "flex"; // تحديد ترتيب العناصر بشكل أفقي
+    rowContainer.style.alignItems = "center"; // تحديد محاذاة العناصر بالوسط
+    rowContainer.append(videoREMOTO, studentName); // إضافة الفيديو واسم الطالب إلى الصف
+    
+    videoChatContainer.append(rowContainer); // إضافة الصف إلى واجهة المستخدم
+    if(localVideoComponent.srcObject){
+      videoChatContainer.append(rowContainer); // إضافة الصف إلى واجهة المستخدم
+    }else{
+      localVideoComponent.srcObject = event.streams[0]
+        }
+    
   } 
 }
 
@@ -259,6 +395,7 @@ function sendIceCandidate(event, remotePeerId) {
       senderId: localPeerId,
       receiverId: remotePeerId,
       roomId: roomId,
+      name:nameInput.value,
       label: event.candidate.sdpMLineIndex,
       candidate: event.candidate.candidate,
     })
@@ -277,4 +414,36 @@ function checkPeerDisconnect(event, remotePeerId) {
     const videoDisconnected = document.getElementById('remotevideo_' + remotePeerId)
     videoDisconnected.remove()
   }
+}
+function addstudent(name,message,date,type){
+  new Promise(function(resolve, reject){
+      var newNode = document.createElement('div');
+      
+      return resolve(newNode);
+  }).then(function(newlyCreatedNode){
+      if(type=="send"){
+        name = "أنت";
+        newlyCreatedNode.innerHTML = ' <div class="panel-body msg_container_base" style="border-radius: 0 0 0 0;display: block;margin-right:20% !important;margin-top:1px !important;" dir="ltr"><div dir="rtl">\
+              <div class="messages msg_receive" style="background-color:#e7ffdb;">\
+              <p style="color:#d22d2d">'+name+'</p>\
+                  <p style="color:#313c3d">'+message+'</p>\
+                  <time style="color:#887b7b"> '+date+'• </time>\
+              </div>\
+          </div></div>';
+      }else{
+        newlyCreatedNode.innerHTML = ' <div class="panel-body msg_container_base" style="display: block;margin-left:20% !important;margin-top:1px !important;" dir="ltr"><div dir="rtl">\
+              <div class="messages msg_receive">\
+              <p style="color:pink">'+name+'</p>\
+                  <p>'+message+'</p>\
+                  <time> '+date+'• </time>\
+              </div>\
+          </div></div>';
+      }
+      
+      document.getElementById('chats').appendChild(newlyCreatedNode);
+
+      //open the chat just in case it is closed
+
+      fixChatScrollBarToBottom();
+  });
 }
