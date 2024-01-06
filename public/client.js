@@ -400,7 +400,7 @@ function setRemoteStream(event, remotePeerId, name) {
     peerConnection.start()
   }
   } catch (error) {
-    
+    alert(error);
   }
 }
 
