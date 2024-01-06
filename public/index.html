@@ -4,21 +4,262 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WebRTC</title>
-  </head>
+    <script src="css/jquery.min.js"></script>
+    <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <title>Chat App</title>
+        
+        <!-- Favicon -->
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <!-- favicon ends -->
+        
+        <!--- LOAD FILES -->
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/font-awesome-animation.min.css">
+
+        <script src="css/jquery.min.js"></script>
+        <script src="css/bootstrap.min.js"></script>
+
+        <!-- Custom styles -->
+        <link rel="stylesheet" href="css/comm.css">
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+                <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.3/html5shiv.js"></script>
+                <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+  </head>
   <body>
+    <div class="container-fluid">
+      <div class="row">
+          <!-- Remote Video -->
+          <div id="video-chat-container" class="mshash">
+            <video id="local-video" autoplay muted width="100%" height="100%"></video>
+          </div>
+          <!-- Remote Video -->
+      </div>
+      
+      <div class="row margin-top-20">                
+          <!-- Call Buttons -->
+          <div class="col-sm-12 text-center" id="callBtns">
+              <button class="btn btn-success btn-sm initCall" id="initAudio"><i class="fa fa-phone"></i></button>
+              <button class="btn btn-info btn-sm initCall" id="initVideo"><i class="fa fa-video-camera"></i></button>
+              <button class="btn btn-danger btn-sm" id="terminateCall" disabled><i class="fa fa-phone-square"></i></button>
+          </div>
+          <!-- Call Buttons -->
+          
+          <!-- Timer -->
+          <div class="col-sm-12 text-center margin-top-5" style="color:#fff">
+              <span id="countHr"></span>h:
+              <span id="countMin"></span>m:
+              <span id="countSec"></span>s
+          </div>
+          <!-- Timer -->
+      </div>
+      
+      
+      <!-- Local Video -->
+      <div class="row">
+          <div class="col-sm-12">
+              <video id="myVid" poster="img/vidbg.png" muted autoplay></video>
+          </div>
+      </div>
+      <!-- Local Video -->
+  </div>
+
+  <div class="container-fluid chat-pane" dir="rtl">
+      <!-- CHAT PANEL-->
+      <div class="row chat-window col-xs-12 col-md-4">
+          <div class="">
+              <div class="panel panel-default chat-pane-panel" dir="ltr">
+                  <div class="panel-heading chat-pane-top-bar">
+                      <div class="col-xs-10" style="margin-left:-20px">
+                          <i class="fa fa-comment" id="remoteStatus"></i>
+                          <b id="remoteStatusTxt" style="color: green;">الدردشة بالقاعة</b>
+                      </div>
+                      <div class="col-xs-2 pull-right">
+                          <span id="minim_chat_window" class="panel-collapsed fa fa-plus icon_minim pointer"></span>
+                      </div>
+                  </div>
+                  
+                  <div class="panel-body msg_container_base" id="chats" style="display: block;"></div>
+                  
+                  <div class="panel-footer">
+                      <span id="typingInfo"></span>
+                      <div class="input-group">
+                        <span class="input-group-btn">
+                              <button class="btn btn-primary btn-sm" style="margin-right: 10px;" id="chatSendBtn">ارسال</button>
+                          </span>
+                          <textarea rows="2" cols="20" id="chatInput" type="text" class="form-control input-sm chat_input" placeholder="Type message here..."></textarea>
+                          <span class="input-group-btn">
+                            <label for="fileInput" style="margin-left: 10px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="28" width="28" viewBox="0 0 576 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M160 80H512c8.8 0 16 7.2 16 16V320c0 8.8-7.2 16-16 16H490.8L388.1 178.9c-4.4-6.8-12-10.9-20.1-10.9s-15.7 4.1-20.1 10.9l-52.2 79.8-12.4-16.9c-4.5-6.2-11.7-9.8-19.4-9.8s-14.8 3.6-19.4 9.8L175.6 336H160c-8.8 0-16-7.2-16-16V96c0-8.8 7.2-16 16-16zM96 96V320c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H160c-35.3 0-64 28.7-64 64zM48 120c0-13.3-10.7-24-24-24S0 106.7 0 120V344c0 75.1 60.9 136 136 136H456c13.3 0 24-10.7 24-24s-10.7-24-24-24H136c-48.6 0-88-39.4-88-88V120zm208 24a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg>
+                              </label>
+                              <input type="file" id="fileInput" style="display: none;">
+                          </span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <!-- CHAT PANEL -->
+  </div>
+  <div class="container-fluid chat-pane" dir="ltr">
+      <!-- CHAT PANEL-->
+      <div class="row chat-window col-xs-12 col-md-4">
+          <div class="" id="students">
+              <div class="panel panel-default chat-pane-panel" dir="rtl">
+                  <div class="panel-heading chat-pane-top-bar">
+                      <div class="col-xs-10" style="margin-left:-20px">
+                          <i class="fa fa-comment" id="remoteStatus"></i> الطلاب المشاركين
+                          <b id="remoteStatusTxt"></b>
+                      </div>
+                      <div class="col-xs-2 pull-right">
+                          <span id="minim_chat_window" class="panel-collapsed fa fa-plus icon_minim pointer"></span>
+                      </div>
+                  </div>
+                  
+                  <div class="panel-body msg_container_base" id="student"></div>
+                  
+                  
+              </div>
+          </div>
+      </div>
+      <!-- CHAT PANEL -->
+  </div>
+  <!--Modal to show that we are calling-->
+  <div id="callModal" class="modal">
+      <div class="modal-content text-center">
+          <div class="modal-header" id="callerInfo"></div>
+
+          <div class="modal-body">
+              <button type="button" class="btn btn-danger btn-sm" id='endCall'>
+                  <i class="fa fa-times-circle"></i> End Call
+              </button>
+          </div>
+      </div>
+  </div>
+  <!--Modal end-->
+
+
+  <!--Modal to give options to receive call-->
+  <div id="rcivModal" class="modal">
+      <div class="modal-content">
+          <div class="modal-header" id="calleeInfo"></div>
+
+          <div class="modal-body text-center">
+              <button type="button" class="btn btn-success btn-sm answerCall" id='startAudio'>
+                  <i class="fa fa-phone"></i> Audio Call
+              </button>
+              <button type="button" class="btn btn-success btn-sm answerCall" id='startVideo'>
+                  <i class="fa fa-video-camera"></i> Video Call
+              </button>
+              <button type="button" class="btn btn-danger btn-sm" id='rejectCall'>
+                  <i class="fa fa-times-circle"></i> Reject Call
+              </button>
+          </div>
+      </div>
+  </div>
+  <!--Modal end-->
+  
+  <!--Snackbar -->
+  <div id="snackbar"></div>
+  <!-- Snackbar -->
+
+  <!-- custom js -->
+  <script src="js/config.js"></script>
+  <script src="js/adapter.js"></script>  <audio id="callerTone" src="media/callertone.mp3" loop preload="auto"></audio>
+  <audio id="msgTone" src="media/msgtone.mp3" preload="auto"></audio>
     <div id="room-selection-container" class="centered">
       <h1>Plataforma de videoconferencia WebRTC para múltimples usuarios</h1>
       <label>Introduzca el número de la sala</label>
       <input id="room-input" type="text" />
+      <input id="name-input" type="text" />
       <button id="connect-button">CONNECT</button>
     </div>
 
-    <div id="video-chat-container" class="video-position">
-      <video id="local-video" autoplay muted></video>
-    </div>
+    
 
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="client.js"></script>
+    <script>
+    $(document).ready(function() {
+  $("#room-input").val(getRoom());
+  $("#name-input").val(getName());
+  document.getElementById("connect-button").click();
+  function getRoom(){
+    var params = window.location.search.substr(1).split("&");
+    
+    if(params){
+        for(let i = 0; i < params.length; i++){
+            var key = params[i].split("=")[0];
+            var value = params[i].split("=")[1];
+            
+            if(key === "room"){
+                return decodeURIComponent(value);
+            }
+        }
+    }
+    
+    else{
+        return "";
+    }
+}
+function getName(){
+    var params = window.location.search.substr(1).split("&");
+    
+    if(params){
+        for(let i = 0; i < params.length; i++){
+            var key = params[i].split("=")[0];
+            var value = params[i].split("=")[1];
+            
+            if(key === "name"){
+                return decodeURIComponent(value);
+            }
+        }
+    }
+    
+    else{
+        return "";
+    }
+}
+$('.chat-pane').on('click', '.icon_minim', function (e) {
+    var $this = $(this);
+    
+    if (!$this.hasClass('panel-collapsed')) {
+        $this.parents('.panel').find('.panel-body').slideUp();
+        $this.addClass('panel-collapsed');
+        $this.removeClass('fa-minus').addClass('fa-plus');
+    } 
+    
+    else {
+        $this.parents('.panel').find('.panel-body').slideDown();
+        $this.removeClass('panel-collapsed');
+        $this.removeClass('fa-plus').addClass('fa-minus');
+    }
+    
+    //fix scrollbar to bottom
+    fixChatScrollBarToBottom();
+});
+//Maximise the chat pane when user focuses on the input and pane is collapsed
+$('.chat-pane').on('focus', '.chat_input', function () {
+    var $this = $(this);
+    
+    if ($('#minim_chat_window').hasClass('panel-collapsed')) {
+        $this.parents('.panel').find('.panel-body').slideDown();
+        $('#minim_chat_window').removeClass('panel-collapsed');
+        $('#minim_chat_window').removeClass('fa-plus').addClass('fa-minus');
+        
+        //fix scrollbar to bottom
+        fixChatScrollBarToBottom();
+    }
+});
+});
+
+    </script>
   </body>
 </html>
