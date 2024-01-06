@@ -359,9 +359,10 @@ async function createAnswer(rtcPeerConnection, remotePeerId) {
 /**
  * Callback cuando se recibe el stream multimedia del par remoto
  */
-function setRemoteStream(event, remotePeerId,name) {
-  console.log('Remote stream set')
-  if(event.track.kind == "video") {
+function setRemoteStream(event, remotePeerId, name) {
+  console.log('Remote stream set');
+  if (event.track.kind === "video") {
+    alert("الفيديو");
     const videoREMOTO = document.createElement('video');
     videoREMOTO.srcObject = event.streams[0]; // تأكد من أن event.streams[0] معرفة بشكل صحيح
     videoREMOTO.id = 'remotevideo_' + remotePeerId; // تأكد من أن remotePeerId معرفة بشكل صحيح
@@ -380,15 +381,14 @@ function setRemoteStream(event, remotePeerId,name) {
     rowContainer.style.alignItems = "center"; // تحديد محاذاة العناصر بالوسط
     rowContainer.append(videoREMOTO, studentName); // إضافة الفيديو واسم الطالب إلى الصف
     
-    videoChatContainer.append(rowContainer); // إضافة الصف إلى واجهة المستخدم
-    if(localVideoComponent.srcObject){
+    if (localVideoComponent.srcObject) {
       videoChatContainer.append(rowContainer); // إضافة الصف إلى واجهة المستخدم
-    }else{
-      localVideoComponent.srcObject = event.streams[0]
-        }
-    
-  } 
+    } else {
+      localVideoComponent.srcObject = event.streams[0];
+    }
+  }
 }
+
 
 /**
  * Envía el candidato ICE recibido del cuando se recibe el evento onicecandidate del objeto RTCPeerConnection
