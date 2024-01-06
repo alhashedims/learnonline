@@ -157,7 +157,7 @@ socket.on('room_created', async (event) => {
  */
 socket.on('room_joined', async (event) => {
   if(localStorage.getItem('token_admin')!="true"){
-    $("#students").hide();
+    //$("#students").hide();
   }
   localPeerId = event.peerId
   console.log(`Current peer ID: ${localPeerId}`)
@@ -269,9 +269,7 @@ async function setLocalStream(mediaConstraints) {
   let stream
   try {
     stream = await navigator.mediaDevices.getDisplayMedia(mediaConstraints)
-  } catch (error) {
-    console.error('Could not get user media', error)
-  }
+  
 
   localStream = stream
   const videoREMOTO = document.createElement('video');
@@ -294,6 +292,10 @@ async function setLocalStream(mediaConstraints) {
   
   videoChatContainer.append(rowContainer);
   videoChatContainer.append(stream)
+  } catch (error) {
+    console.error('Could not get user media', error);
+	alert(error);
+  }
 }
 
 /**
