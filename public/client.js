@@ -47,11 +47,10 @@ const iceServers = {
     { urls: 'stun:stun1.l.google.com:19302' },
   ],
 }
-$("#chatInput").keydown(function(event){
-  if (event.shiftKey && event.keyCode === 13) {
-  } else if (event.keyCode === 13) {
+$("#chatInput").keyup(function(event){
+  if (event.keyCode === 13) {
     $("#chatSendBtn").click();
-  }
+}
 });
 
 function getRoom(){
@@ -96,8 +95,7 @@ connectButton.addEventListener('click', () => {
 })
 sendmessage.addEventListener('click', () => {
   sndmsg(chatInput.value);
-  chatInput.value = ''
-
+  chatInput.value = '';
 })
 function sndmsg(event) {
  try {
@@ -276,7 +274,7 @@ async function setLocalStream(mediaConstraints) {
   try {
     stream = await navigator.mediaDevices.getDisplayMedia(mediaConstraints)
   } catch (error) {
-    alert('Could not get user media'+ error)
+    console.error('Could not get user media', error)
   }
 
   localStream = stream
@@ -299,6 +297,7 @@ async function setLocalStream(mediaConstraints) {
   rowContainer.append(videoREMOTO, studentName); // إضافة الفيديو واسم الطالب إلى الصف
   
   videoChatContainer.append(rowContainer);
+  videoChatContainer.append(stream)
 }
 
 /**
@@ -359,53 +358,36 @@ async function createAnswer(rtcPeerConnection, remotePeerId) {
 /**
  * Callback cuando se recibe el stream multimedia del par remoto
  */
-function setRemoteStream(event, remotePeerId, name) {
-   try {
-    console.log('Remote stream set')
-  if (event.track.kind == "video") {
-    // إنشاء اتصال RTCPeerConnection
-    const peerConnection = new RTCPeerConnection()
-
-    // إضافة دفق الفيديو إلى الاتصال
-    peerConnection.addStream(event.streams[0])
-
-    // تحقق مما إذا كان الاتصال فارغًا
-    if (peerConnection.iceConnectionState === 'new' || peerConnection.iceConnectionState === 'connecting') {
-      return
-    }
-
-    // إنشاء عنصر الفيديو
-    const videoREMOTO = document.createElement('video')
-    videoREMOTO.srcObject = peerConnection.localDescription.sdp
-    videoREMOTO.id = 'remotevideo_' + remotePeerId
-    videoREMOTO.setAttribute('autoplay', '')
-    videoREMOTO.style.width = "200px"
-    videoREMOTO.style.height = "150px"
-
+function setRemoteStream(event, remotePeerId,name) {
+  console.log('Remote stream set')
+  if(event.track.kind == "video") {
+    const videoREMOTO = document.createElement('video');
+    videoREMOTO.srcObject = event.streams[0]; // تأكد من أن event.streams[0] معرفة بشكل صحيح
+    videoREMOTO.id = 'remotevideo_' + remotePeerId; // تأكد من أن remotePeerId معرفة بشكل صحيح
+    videoREMOTO.setAttribute('autoplay', '');
+    videoREMOTO.style.width = "200px"; // تحديد عرض الفيديو
+    videoREMOTO.style.height = "150px"; // تحديد ارتفاع الفيديو
+    
     // إنشاء عنصر النص لاسم الطالب
-    const studentName = document.createElement('p')
-    studentName.textContent = name
-    studentName.style.marginLeft = "10px"
-
+    var studentName = document.createElement('p');
+    studentName.textContent = name; // استبدل 'اسم الطالب' بالاسم الفعلي للطالب
+    studentName.style.marginLeft = "10px"; // تحديد المسافة بين الفيديو والنص
+    
     // إنشاء عنصر div لتحديد الصف
-    const rowContainer = document.createElement('div')
-    rowContainer.style.display = "flex"
-    rowContainer.style.alignItems = "center"
-    rowContainer.append(videoREMOTO, studentName)
-
-    // إضافة الصف إلى واجهة المستخدم
-    videoChatContainer.append(rowContainer)
-
-    // بدء تشغيل الاتصال
-    peerConnection.start()
-  }
-  } catch (error) {
-    alert(error);
-  }
+    var rowContainer = document.createElement('div');
+    rowContainer.style.display = "flex"; // تحديد ترتيب العناصر بشكل أفقي
+    rowContainer.style.alignItems = "center"; // تحديد محاذاة العناصر بالوسط
+    rowContainer.append(videoREMOTO, studentName); // إضافة الفيديو واسم الطالب إلى الصف
+    
+    videoChatContainer.append(rowContainer); // إضافة الصف إلى واجهة المستخدم
+    if(localVideoComponent.srcObject){
+      videoChatContainer.append(rowContainer); // إضافة الصف إلى واجهة المستخدم
+    }else{
+      localVideoComponent.srcObject = event.streams[0]
+        }
+    
+  } 
 }
-
-
-
 
 /**
  * Envía el candidato ICE recibido del cuando se recibe el evento onicecandidate del objeto RTCPeerConnection
