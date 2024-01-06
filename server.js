@@ -18,9 +18,11 @@ io.on('connection', (socket) => {
   console.log(`User connected`)
   socket.on('join', (payload) => {
     const roomId = payload.room
+    const name = payload.name
+    console.log(name)
     const roomClients = io.sockets.adapter.rooms[roomId] || { length: 0 }
     const numberOfClients = roomClients.length
-    console.log(`Room ID: ${roomId}`)
+    console.log(`Room ID: ${payload.name}`)
     console.log(`roomClients: ${roomClients}`)
     console.log(`numberOfClients of ${roomId}: ${numberOfClients}`)
 
@@ -31,6 +33,7 @@ io.on('connection', (socket) => {
       socket.join(roomId)
       socket.emit('room_created', {
         roomId: roomId,
+        name:name,
         peerId: socket.id
       })
     } else {
@@ -38,6 +41,7 @@ io.on('connection', (socket) => {
       socket.join(roomId)
       socket.emit('room_joined', {
         roomId: roomId,
+        name:name,
         peerId: socket.id
       })
     } 
@@ -45,16 +49,31 @@ io.on('connection', (socket) => {
 
   // These events are emitted to all the sockets connected to the same room except the sender.
   socket.on('start_call', (event) => {
-    console.log(`Broadcasting start_call event to peers in room ${event.roomId} from peer ${event.senderId}`)
+    console.log(`Broadcasting start_call event to peers in room ${event.name} from peer ${event.senderId}`)
     socket.broadcast.to(event.roomId).emit('start_call', {
-      senderId: event.senderId
+      senderId: event.senderId,
+      name:event.name,
   })})
-
+  socket.on('message', (event) => {
+    socket.broadcast.to(event.roomId).emit('message', {
+      senderId: event.senderId,
+      message:event.message,
+      sender:event.sender,
+      date:event.date,
+  })})
+  socket.on('image', (event) => {
+    socket.broadcast.to(event.roomId).emit('image', {
+      senderId: event.senderId,
+      message:event.message,
+      sender:event.sender,
+      date:event.date,
+  })})
   //Events emitted to only one peer
   socket.on('webrtc_offer', (event) => {
-    console.log(`Sending webrtc_offer event to peers in room ${event.roomId} from peer ${event.senderId} to peer ${event.receiverId}`)
+    console.log(`Sending webrtc_offer event to peers in room ${event.name} from peer ${event.senderId} to peer ${event.receiverId}`)
     socket.broadcast.to(event.receiverId).emit('webrtc_offer', {
       sdp: event.sdp,
+      name:event.name,
       senderId: event.senderId
   })})
 
@@ -66,7 +85,7 @@ io.on('connection', (socket) => {
   })})
 
   socket.on('webrtc_ice_candidate', (event) => {
-    console.log(`Sending webrtc_ice_candidate event to peers in room ${event.roomId} from peer ${event.senderId} to peer ${event.receiverId}`)
+    console.log(`Sending webrtc_ice_candidate event to peers in room ${event.name} from peer ${event.senderId} to peer ${event.receiverId}`)
     socket.broadcast.to(event.receiverId).emit('webrtc_ice_candidate', event)
   })
 })
