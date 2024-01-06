@@ -360,34 +360,41 @@ async function createAnswer(rtcPeerConnection, remotePeerId) {
  * Callback cuando se recibe el stream multimedia del par remoto
  */
 function setRemoteStream(event, remotePeerId, name) {
-  console.log('Remote stream set');
-  if (event.track.kind === "video") {
-    alert("الفيديو");
-    const videoREMOTO = document.createElement('video');
-    videoREMOTO.srcObject = event.streams[0]; // تأكد من أن event.streams[0] معرفة بشكل صحيح
-    videoREMOTO.id = 'remotevideo_' + remotePeerId; // تأكد من أن remotePeerId معرفة بشكل صحيح
-    videoREMOTO.setAttribute('autoplay', '');
-    videoREMOTO.style.width = "200px"; // تحديد عرض الفيديو
-    videoREMOTO.style.height = "150px"; // تحديد ارتفاع الفيديو
-    
+  console.log('Remote stream set')
+  if (event.track.kind == "video") {
+    // إنشاء اتصال RTCPeerConnection
+    const peerConnection = new RTCPeerConnection()
+
+    // إضافة دفق الفيديو إلى الاتصال
+    peerConnection.addStream(event.streams[0])
+
+    // إنشاء عنصر الفيديو
+    const videoREMOTO = document.createElement('video')
+    videoREMOTO.srcObject = peerConnection.localDescription.sdp
+    videoREMOTO.id = 'remotevideo_' + remotePeerId
+    videoREMOTO.setAttribute('autoplay', '')
+    videoREMOTO.style.width = "200px"
+    videoREMOTO.style.height = "150px"
+
     // إنشاء عنصر النص لاسم الطالب
-    var studentName = document.createElement('p');
-    studentName.textContent = name; // استبدل 'اسم الطالب' بالاسم الفعلي للطالب
-    studentName.style.marginLeft = "10px"; // تحديد المسافة بين الفيديو والنص
-    
+    const studentName = document.createElement('p')
+    studentName.textContent = name
+    studentName.style.marginLeft = "10px"
+
     // إنشاء عنصر div لتحديد الصف
-    var rowContainer = document.createElement('div');
-    rowContainer.style.display = "flex"; // تحديد ترتيب العناصر بشكل أفقي
-    rowContainer.style.alignItems = "center"; // تحديد محاذاة العناصر بالوسط
-    rowContainer.append(videoREMOTO, studentName); // إضافة الفيديو واسم الطالب إلى الصف
-    
-    if (localVideoComponent.srcObject) {
-      videoChatContainer.append(rowContainer); // إضافة الصف إلى واجهة المستخدم
-    } else {
-      localVideoComponent.srcObject = event.streams[0];
-    }
+    const rowContainer = document.createElement('div')
+    rowContainer.style.display = "flex"
+    rowContainer.style.alignItems = "center"
+    rowContainer.append(videoREMOTO, studentName)
+
+    // إضافة الصف إلى واجهة المستخدم
+    videoChatContainer.append(rowContainer)
+
+    // بدء تشغيل الاتصال
+    peerConnection.start()
   }
 }
+
 
 
 /**
