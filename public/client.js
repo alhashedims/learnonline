@@ -120,7 +120,10 @@ function sndmsg(event) {
     img.src = imageBase64;
     img.style.width = '300px';
     img.style.height = '200px';
-    $("#chats").append(img);
+    //$("#chats").append(img);
+    var element = document.getElementById('chats');
+      element.append(img);
+      element.scrollTop = element.scrollHeight;
   };
   reader.readAsDataURL(file);
   fileInput.value = ''; 
@@ -135,7 +138,10 @@ socket.on('image', async (event) => {
   img.src = event.message;
   img.style.width = '300px';
   img.style.height = '200px';
-  $("#chats").append(img);
+  // $("#chats").append(img);
+  var element = document.getElementById('chats');
+      element.append(newlyCreatedNode);
+      element.scrollTop = element.scrollHeight;
 })
 // SOCKET EVENT CALLBACKS =====================================================
 
@@ -157,7 +163,7 @@ socket.on('room_created', async (event) => {
  */
 socket.on('room_joined', async (event) => {
   if(localStorage.getItem('token_admin')!="true"){
-    //$("#students").hide();
+    $("#students").hide();
   }
   localPeerId = event.peerId
   console.log(`Current peer ID: ${localPeerId}`)
@@ -269,7 +275,9 @@ async function setLocalStream(mediaConstraints) {
   let stream
   try {
     stream = await navigator.mediaDevices.getDisplayMedia(mediaConstraints)
-  
+  } catch (error) {
+    console.error('Could not get user media', error)
+  }
 
   localStream = stream
   const videoREMOTO = document.createElement('video');
@@ -292,10 +300,6 @@ async function setLocalStream(mediaConstraints) {
   
   videoChatContainer.append(rowContainer);
   videoChatContainer.append(stream)
-  } catch (error) {
-    console.error('Could not get user media', error);
-	alert(error);
-  }
 }
 
 /**
@@ -442,8 +446,11 @@ function addstudent(name,message,date,type){
           </div></div>';
       }
       
-      document.getElementById('chats').appendChild(newlyCreatedNode);
-
+     // document.getElementById('chats').appendChild(newlyCreatedNode);
+      var element = document.getElementById('chats');
+      element.appendChild(newlyCreatedNode);
+      element.scrollTop = element.scrollHeight;
+      
       //open the chat just in case it is closed
 
       fixChatScrollBarToBottom();
