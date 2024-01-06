@@ -299,7 +299,6 @@ async function setLocalStream(mediaConstraints) {
   rowContainer.append(videoREMOTO, studentName); // إضافة الفيديو واسم الطالب إلى الصف
   
   videoChatContainer.append(rowContainer);
-  videoChatContainer.append(stream)
 }
 
 /**
