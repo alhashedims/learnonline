@@ -360,7 +360,8 @@ async function createAnswer(rtcPeerConnection, remotePeerId) {
  * Callback cuando se recibe el stream multimedia del par remoto
  */
 function setRemoteStream(event, remotePeerId, name) {
-  console.log('Remote stream set')
+ try{
+    console.log('Remote stream set')
   if (event.track.kind == "video") {
     // إنشاء اتصال RTCPeerConnection
     const peerConnection = new RTCPeerConnection()
@@ -392,6 +393,9 @@ function setRemoteStream(event, remotePeerId, name) {
 
     // بدء تشغيل الاتصال
     peerConnection.start()
+  }
+ }catch (error) {
+    alert(error);
   }
 }
 
