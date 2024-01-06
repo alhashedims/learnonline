@@ -171,7 +171,7 @@ async function setLocalStream(mediaConstraints) {
   console.log('Local stream set')
   let stream
   try {
-    stream = await navigator.mediaDevices.getUserMedia(mediaConstraints)
+    stream = await navigator.mediaDevices.getdisplaymedia(mediaConstraints)
   } catch (error) {
     console.error('Could not get user media', error)
   }
