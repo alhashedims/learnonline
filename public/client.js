@@ -138,9 +138,9 @@ socket.on('image', async (event) => {
   img.src = event.message;
   img.style.width = '300px';
   img.style.height = '200px';
-  $("#chats").append(img);
+  //$("#chats").append(img);
   var element = document.getElementById('chats');
-      element.append(newlyCreatedNode);
+      element.append(img);
       element.scrollTop = element.scrollHeight;
 })
 // SOCKET EVENT CALLBACKS =====================================================
