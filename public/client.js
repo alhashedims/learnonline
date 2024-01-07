@@ -45,9 +45,6 @@ const iceServers = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    {urls: 'turn:216.24.57.253:3478',
-      username: 'test123',
-      credential: 'test123',}
   ],
 }
 $("#chatInput").keyup(function(event){
@@ -103,8 +100,10 @@ sendmessage.addEventListener('click', () => {
 function sndmsg(event) {
  try {
   var date = new Date().toLocaleTimeString();
+  if(event!=""){
   socket.emit('message', {name: getRoom(),message:event,senderId: localPeerId,roomId:getRoom(),sender:getName(),date:date});
   addstudent(getName(),event,date,"send");
+  }
   var fileInput = document.getElementById('fileInput');
   var file = fileInput.files[0];
   if(file!=undefined){
@@ -139,7 +138,7 @@ socket.on('image', async (event) => {
   img.src = event.message;
   img.style.width = '300px';
   img.style.height = '200px';
-  // $("#chats").append(img);
+  $("#chats").append(img);
   var element = document.getElementById('chats');
       element.append(newlyCreatedNode);
       element.scrollTop = element.scrollHeight;
