@@ -43,8 +43,8 @@ let roomId;
 // Servidores ICE usados. Solo servidores STUN en este caso.
 const iceServers = {
   iceServers: [
+    { urls: 'stun:stun.stunprotocol.org:3478' },
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
   ],
 }
 $("#chatInput").keyup(function(event){
@@ -138,6 +138,7 @@ socket.on('image', async (event) => {
   img.src = event.message;
   img.style.width = '300px';
   img.style.height = '200px';
+  img.style.marginLeft = '20px';
   //$("#chats").append(img);
   var element = document.getElementById('chats');
       element.append(img);
@@ -299,7 +300,6 @@ async function setLocalStream(mediaConstraints) {
   rowContainer.append(videoREMOTO, studentName); // إضافة الفيديو واسم الطالب إلى الصف
   
   videoChatContainer.append(rowContainer);
-  videoChatContainer.append(stream)
 }
 
 /**
