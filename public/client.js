@@ -42,10 +42,10 @@ let roomId;
 
 // Servidores ICE usados. Solo servidores STUN en este caso.
 const iceServers = {
-  iceServers: [
-    { urls: 'stun:stun.stunprotocol.org:3478' },
-    { urls: 'stun:stun.l.google.com:19302' },
-  ],
+ 'iceServers': [
+    { 'urls': 'stun:stun.stunprotocol.org:3478' },
+    { 'urls': 'stun:stun.l.google.com:19302' },
+  ]
 }
 $("#chatInput").keyup(function(event){
   if (event.keyCode === 13) {
