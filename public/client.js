@@ -45,6 +45,9 @@ const iceServers = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
+    {urls: 'turn:216.24.57.253:3478',
+      username: 'test123',
+      credential: 'test123',}
   ],
 }
 $("#chatInput").keyup(function(event){
